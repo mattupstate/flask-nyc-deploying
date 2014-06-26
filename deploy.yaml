@@ -1,0 +1,69 @@
+---
+- hosts: all
+  sudo: yes
+
+  vars:
+    app_socket: 127.0.0.1:8000
+    app_dir: /opt/hello_world
+    config_dir: /etc/hello-world
+    virtualenv_dir: /etc/hello-world/venv
+
+  tasks:
+    - name: Install system packages
+      apt: name={{ item }}
+      with_items:
+        - python-dev
+        - python-pip
+        - nginx
+
+    - name: Remove default Nginx config
+      file: dest=/etc/nginx/sites-enabled/default state=absent
+      notify:
+        - Restart Nginx
+
+    - name: Install Python packages
+      pip: name={{ item }}
+      with_items:
+        - virtualenv
+        - uwsgi
+
+    - name: Create config directory
+      file: path={{ config_dir }} state=directory
+
+    - name: Create virtualenv
+      command: virtualenv {{ virtualenv_dir }}
+
+    - name: Copy app
+      copy: src=hello_world dest=/opt
+      notify:
+        - Restart App
+
+    - name: Install app dependencies
+      pip: >
+        requirements={{ app_dir }}/requirements.txt
+        virtualenv={{ virtualenv_dir }}
+
+    - name: Copy instance settings
+      copy: src=ansible/settings.py dest={{ config_dir }}/settings.py
+      notify:
+        - Restart App
+
+    - name: Render upstart config
+      template: src=ansible/upstart.conf dest=/etc/init/hello-world.conf
+      notify:
+        - Restart App
+
+    - name: Enable hello-world app service
+      service: name=hello-world enabled=yes
+
+    - name: Render Nginx config
+      template: src=ansible/nginx.conf dest=/etc/nginx/sites-enabled/hello-world.conf
+      notify:
+        - Restart Nginx
+
+  handlers:
+    - name: Restart Nginx
+      service: name=nginx state=restarted
+
+    - name: Restart App
+      service: name=hello-world state=restarted
