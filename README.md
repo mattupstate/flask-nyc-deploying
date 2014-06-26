@@ -1,6 +1,6 @@
 # Deploying Flask (WSGI) Applications
 
-These are the files that were used as part of the demo at a presenation for the Flask-NYC meetup group given on June 25th, 2014 at InterviewJet
+These are the files that were used as part of the demo at a presenation for the Flask-NYC meetup group given on June 25th, 2014 at InterviewJet. The slides are located at [Speaker Deck](https://speakerdeck.com/mattupstate/deploying-flask-wsgi-applications)
 
 The `hello_world` folder contains the basic app files.
 
